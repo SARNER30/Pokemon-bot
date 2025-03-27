@@ -1,4 +1,4 @@
-limport os
+import os
 import random
 import sqlite3
 import asyncio
@@ -99,8 +99,7 @@ def get_admin_menu():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="Создать покемона")],
-            [KeyboardButton(text="Создать промокод")],
-            [KeyboardButton(text="Добавить баланс")],
+            [KeyboardButton(text="Изменить баланс")],
             [KeyboardButton(text="Назад")]
         ],
         resize_keyboard=True
@@ -117,7 +116,7 @@ def get_shop_menu():
         resize_keyboard=True
     )
 
-# Все 500 покемонов сгруппированы по лигам
+# Покемоны (первые 50 для примера)
 POKEMONS = {
     1: [
     {"id": 1, "name": "Bulbasaur", "hp": 45, "attack": 49, "defense": 49, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"},
@@ -220,7 +219,7 @@ POKEMONS = {
     {"id": 98, "name": "Krabby", "hp": 30, "attack": 105, "defense": 90, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/98.png"},
     {"id": 99, "name": "Kingler", "hp": 55, "attack": 130, "defense": 115, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/99.png"},
     {"id": 100, "name": "Voltorb", "hp": 40, "attack": 30, "defense": 50, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/100.png"}
-],
+].
     2: [
     {"id": 101, "name": "Electrode", "hp": 60, "attack": 50, "defense": 70, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/101.png"},
     {"id": 102, "name": "Exeggcute", "hp": 60, "attack": 40, "defense": 80, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/102.png"},
@@ -323,7 +322,7 @@ POKEMONS = {
     {"id": 199, "name": "Slowking", "hp": 95, "attack": 75, "defense": 80, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/199.png"},
     {"id": 200, "name": "Misdreavus", "hp": 60, "attack": 60, "defense": 60, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/200.png"}
 ],
-    3: [
+3: [
 {"id": 201, "name": "Unown", "hp": 48, "attack": 72, "defense": 48, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/201.png"},
 {"id": 202, "name": "Wobbuffet", "hp": 190, "attack": 33, "defense": 58, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/202.png"},
 {"id": 203, "name": "Girafarig", "hp": 70, "attack": 80, "defense": 65, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/203.png"},
@@ -425,7 +424,7 @@ POKEMONS = {
 {"id": 299, "name": "Nosepass", "hp": 30, "attack": 45, "defense": 135, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/299.png"},
 {"id": 300, "name": "Skitty", "hp": 50, "attack": 45, "defense": 45, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/300.png"}
     ],
-    4: [
+4:  [
 {"id": 301, "name": "Delcatty", "hp": 70, "attack": 65, "defense": 65, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/301.png"},
 {"id": 302, "name": "Sableye", "hp": 50, "attack": 75, "defense": 75, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/302.png"},
 {"id": 303, "name": "Mawile", "hp": 50, "attack": 85, "defense": 85, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/303.png"},
@@ -527,7 +526,7 @@ POKEMONS = {
 {"id": 399, "name": "Bidoof", "hp": 59, "attack": 45, "defense": 40, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/399.png"},
 {"id": 400, "name": "Bibarel", "hp": 79, "attack": 85, "defense": 60, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/400.png"},
     ],
-    5:    ]
+5:     [
     {"id": 401, "name": "Kricketot", "hp": 37, "attack": 25, "defense": 41, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/401.png"},
     {"id": 402, "name": "Kricketune", "hp": 77, "attack": 85, "defense": 51, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/402.png"},
     {"id": 403, "name": "Shinx", "hp": 45, "attack": 65, "defense": 34, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/403.png"},
@@ -629,84 +628,20 @@ POKEMONS = {
     {"id": 499, "name": "Pignite", "hp": 90, "attack": 93, "defense": 55, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/499.png"},
     {"id": 500, "name": "Emboar", "hp": 110, "attack": 123, "defense": 65, "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/500.png"}
     ]
+
 }
 
-# Генерация покемона из определенной лиги
-async def generate_pokemon_from_league(league):
-    # 10% шанс получить кастомного покемона
-    if random.random() < 0.1:
-        cursor.execute("SELECT * FROM custom_pokemons ORDER BY RANDOM() LIMIT 1")
-        custom = cursor.fetchone()
-        if custom:
-            return {
-                'id': -1,
-                'name': custom[1],
-                'image': custom[2],
-                'hp': custom[3],
-                'attack': custom[4],
-                'defense': custom[5],
-                'is_custom': True
-            }
-    
-    if league not in POKEMONS:
-        return None
-    
-    return random.choice(POKEMONS[league])
+# Состояния для FSM
+class CreatePokemonState(StatesGroup):
+    name = State()
+    image = State()
+    hp = State()
+    attack = State()
+    defense = State()
 
-# Получение текущей лиги пользователя
-def get_user_league(user_id):
-    cursor.execute("SELECT trainer_level FROM users WHERE user_id = ?", (user_id,))
-    result = cursor.fetchone()
-    if result:
-        return min(result[0], 5)  # Максимум 5 лига
-    return 1  # По умолчанию 1 лига
-
-# Проверка доступа к лиге
-def can_access_league(user_id, target_league):
-    user_league = get_user_league(user_id)
-    return target_league <= user_league
-
-# Проверка лимита покемонов
-def can_catch_pokemon(user_id, pokemon_id):
-    cursor.execute("SELECT count FROM pokemon_counts WHERE user_id = ? AND pokemon_id = ?", (user_id, pokemon_id))
-    result = cursor.fetchone()
-    if result:
-        return result[0] < 3
-    return True
-
-# Добавление покемона с учетом лимита
-def add_pokemon_with_limit(user_id, pokemon):
-    pokemon_id = pokemon['id']
-    
-    # Проверяем лимит
-    if not can_catch_pokemon(user_id, pokemon_id):
-        return False
-    
-    # Добавляем покемона
-    cursor.execute("""
-        INSERT INTO pokemons (owner_id, pokemon_id, name, image, hp, attack, defense, is_custom)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (user_id, pokemon_id, pokemon['name'], pokemon['image'], pokemon['hp'], pokemon['attack'], pokemon['defense'], pokemon.get('is_custom', False)))
-    
-    # Обновляем счетчик
-    cursor.execute("""
-        INSERT OR IGNORE INTO pokemon_counts (user_id, pokemon_id, count) 
-        VALUES (?, ?, 0)
-    """, (user_id, pokemon_id))
-    
-    cursor.execute("""
-        UPDATE pokemon_counts SET count = count + 1 
-        WHERE user_id = ? AND pokemon_id = ?
-    """, (user_id, pokemon_id))
-    
-    # Обновляем общую статистику
-    cursor.execute("""
-        UPDATE users SET total_pokemons = total_pokemons + 1 
-        WHERE user_id = ?
-    """, (user_id,))
-    
-    conn.commit()
-    return True
+class ChangeBalanceState(StatesGroup):
+    user_id = State()
+    amount = State()
 
 # ========== ОСНОВНЫЕ КОМАНДЫ ==========
 
@@ -729,127 +664,117 @@ async def cmd_start(message: Message):
 async def back_handler(message: Message):
     await message.answer("Главное меню:", reply_markup=get_main_menu(message.from_user.id))
 
-# ========== КОМАНДЫ ЛОВЛИ ПО ЛИГАМ ==========
+# ========== АДМИН-ПАНЕЛЬ ==========
 
-@dp.message(Command("catch"))
-async def cmd_catch_league1(message: Message):
-    await handle_catch_command(message, 1)
-
-@dp.message(Command("catch2"))
-async def cmd_catch_league2(message: Message):
-    await handle_catch_command(message, 2)
-
-@dp.message(Command("catch3"))
-async def cmd_catch_league3(message: Message):
-    await handle_catch_command(message, 3)
-
-@dp.message(Command("catch4"))
-async def cmd_catch_league4(message: Message):
-    await handle_catch_command(message, 4)
-
-@dp.message(Command("catch5"))
-async def cmd_catch_league5(message: Message):
-    await handle_catch_command(message, 5)
-
-async def handle_catch_command(message: Message, league: int):
-    user_id = message.from_user.id
-    
-    # Проверяем доступ к лиге
-    if not can_access_league(user_id, league):
-        await message.answer(f"❌ У вас нет доступа к {league} лиге! Ваш текущий уровень: {get_user_league(user_id)}")
+@dp.message(F.text == "👑 Админ-панель")
+async def admin_panel(message: Message):
+    if message.from_user.id not in ADMIN_IDS:
         return
+    
+    await message.answer("👑 Админ-панель:", reply_markup=get_admin_menu())
+
+@dp.message(F.text == "Изменить баланс")
+async def change_balance_start(message: Message, state: FSMContext):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    
+    await message.answer("Введите ID пользователя:")
+    await state.set_state(ChangeBalanceState.user_id)
+
+@dp.message(ChangeBalanceState.user_id)
+async def process_user_id(message: Message, state: FSMContext):
+    try:
+        user_id = int(message.text)
+        await state.update_data(user_id=user_id)
+        await message.answer("Введите сумму для изменения баланса (можно отрицательную):")
+        await state.set_state(ChangeBalanceState.amount)
+    except ValueError:
+        await message.answer("❌ Некорректный ID пользователя!")
+
+@dp.message(ChangeBalanceState.amount)
+async def process_amount(message: Message, state: FSMContext):
+    try:
+        amount = int(message.text)
+        data = await state.get_data()
+        user_id = data['user_id']
+        
+        cursor.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, user_id))
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            await message.answer("❌ Пользователь не найден!")
+        else:
+            await message.answer(f"✅ Баланс пользователя {user_id} изменен на {amount} монет")
+        
+        await state.clear()
+    except ValueError:
+        await message.answer("❌ Некорректная сумма!")
+
+# ========== ЛОВЛЯ ПОКЕМОНОВ ==========
+
+@dp.message(F.text == "🎣 Ловить покемона")
+async def catch_pokemon(message: Message):
+    user_id = message.from_user.id
     
     # Проверяем есть ли покебалы
     cursor.execute("SELECT pokeballs FROM users WHERE user_id = ?", (user_id,))
-    pokeballs = cursor.fetchone()[0]
+    result = cursor.fetchone()
     
-    if pokeballs <= 0:
+    if not result or result[0] <= 0:
         await message.answer("❌ У вас закончились покебалы! Купите их в магазине.")
         return
     
-    # Генерируем покемона из нужной лиги
-    pokemon = await generate_pokemon_from_league(league)
+    # Определяем лигу пользователя
+    cursor.execute("SELECT trainer_level FROM users WHERE user_id = ?", (user_id,))
+    league = min(cursor.fetchone()[0], len(POKEMONS))
     
-    if not pokemon:
-        await message.answer("❌ Ошибка генерации покемона")
-        return
+    # Генерируем покемона
+    pokemon = random.choice(POKEMONS[league])
     
     # Уменьшаем количество покеболов
     cursor.execute("UPDATE users SET pokeballs = pokeballs - 1 WHERE user_id = ?", (user_id,))
     conn.commit()
     
     # Добавляем в покедекс
-    cursor.execute("""
-        INSERT OR IGNORE INTO pokedex (user_id, pokemon_id) VALUES (?, ?)
-    """, (user_id, pokemon['id']))
-    
-    # Помечаем как увиденного
-    cursor.execute("""
-        UPDATE pokedex SET seen = TRUE WHERE user_id = ? AND pokemon_id = ?
-    """, (user_id, pokemon['id']))
+    cursor.execute("INSERT OR IGNORE INTO pokedex (user_id, pokemon_id) VALUES (?, ?)", (user_id, pokemon['id']))
+    cursor.execute("UPDATE pokedex SET seen = TRUE WHERE user_id = ? AND pokemon_id = ?", (user_id, pokemon['id']))
     conn.commit()
     
     # Клавиатура для ловли
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Поймать!", callback_data=f"catch_{pokemon['id']}_{league}")],
+        [InlineKeyboardButton(text="Поймать!", callback_data=f"catch_{pokemon['id']}")],
         [InlineKeyboardButton(text="Убежать", callback_data="run_away")]
     ])
     
     await message.answer_photo(
         photo=pokemon['image'],
-        caption=f"Вы встретили дикого {pokemon['name']} (Лига {league})!\nHP: {pokemon['hp']} | ATK: {pokemon['attack']} | DEF: {pokemon['defense']}",
+        caption=f"Вы встретили дикого {pokemon['name']}!\nHP: {pokemon['hp']} | ATK: {pokemon['attack']} | DEF: {pokemon['defense']}",
         reply_markup=keyboard
     )
 
-@dp.message(F.text == "🎣 Ловить покемона")
-async def catch_pokemon_button(message: Message):
-    user_id = message.from_user.id
-    league = get_user_league(user_id)
-    await handle_catch_command(message, league)
-
 @dp.callback_query(F.data.startswith("catch_"))
 async def catch_pokemon_callback(callback: CallbackQuery):
-    data_parts = callback.data.split("_")
-    pokemon_id = int(data_parts[1])
-    league = int(data_parts[2]) if len(data_parts) > 2 else 1
+    pokemon_id = int(callback.data.split("_")[1])
     user_id = callback.from_user.id
     
-    # Проверяем доступ к лиге
-    if not can_access_league(user_id, league):
-        await callback.answer("❌ У вас нет доступа к этой лиге!")
-        return
-    
-    # Находим покемона в списке
+    # Находим покемона
     pokemon = None
-    if pokemon_id == -1:  # Кастомный покемон
-        cursor.execute("SELECT * FROM custom_pokemons WHERE id = ?", (abs(pokemon_id),))
-        custom = cursor.fetchone()
-        if custom:
-            pokemon = {
-                'id': -1,
-                'name': custom[1],
-                'image': custom[2],
-                'hp': custom[3],
-                'attack': custom[4],
-                'defense': custom[5],
-                'is_custom': True
-            }
-    else:
-        # Ищем покемона в соответствующей лиге
-        for league_pokemons in POKEMONS.values():
-            for p in league_pokemons:
-                if p['id'] == pokemon_id:
-                    pokemon = p
-                    break
-            if pokemon:
+    for league in POKEMONS.values():
+        for p in league:
+            if p['id'] == pokemon_id:
+                pokemon = p
                 break
+        if pokemon:
+            break
     
     if not pokemon:
         await callback.answer("❌ Ошибка: покемон не найден")
         return
     
-    # Проверяем лимит
-    if not can_catch_pokemon(user_id, pokemon['id']):
+    # Проверяем лимит (максимум 3 одинаковых покемона)
+    cursor.execute("SELECT count FROM pokemon_counts WHERE user_id = ? AND pokemon_id = ?", (user_id, pokemon_id))
+    result = cursor.fetchone()
+    if result and result[0] >= 3:
         await callback.message.edit_caption(
             caption=f"❌ У вас уже есть 3 {pokemon['name']}! Максимальное количество достигнуто.",
             reply_markup=None
@@ -861,24 +786,35 @@ async def catch_pokemon_callback(callback: CallbackQuery):
     catch_chance = min(90, max(10, 100 - pokemon['hp']))
     
     if random.randint(1, 100) <= catch_chance:
-        # Добавляем покемона с учетом лимита
-        if add_pokemon_with_limit(user_id, pokemon):
-            # Помечаем как пойманного в покедексе
-            cursor.execute("""
-                UPDATE pokedex SET caught = TRUE 
-                WHERE user_id = ? AND pokemon_id = ?
-            """, (user_id, pokemon['id']))
-            conn.commit()
-            
-            await callback.message.edit_caption(
-                caption=f"🎉 Вы поймали {pokemon['name']}!",
-                reply_markup=None
-            )
-        else:
-            await callback.message.edit_caption(
-                caption=f"❌ Не удалось добавить покемона {pokemon['name']}",
-                reply_markup=None
-            )
+        # Добавляем покемона
+        cursor.execute("""
+            INSERT INTO pokemons (owner_id, pokemon_id, name, image, hp, attack, defense)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, pokemon['id'], pokemon['name'], pokemon['image'], pokemon['hp'], pokemon['attack'], pokemon['defense']))
+        
+        # Обновляем счетчик
+        cursor.execute("""
+            INSERT OR IGNORE INTO pokemon_counts (user_id, pokemon_id, count) 
+            VALUES (?, ?, 0)
+        """, (user_id, pokemon['id']))
+        
+        cursor.execute("""
+            UPDATE pokemon_counts SET count = count + 1 
+            WHERE user_id = ? AND pokemon_id = ?
+        """, (user_id, pokemon['id']))
+        
+        # Обновляем общую статистику
+        cursor.execute("UPDATE users SET total_pokemons = total_pokemons + 1 WHERE user_id = ?", (user_id,))
+        
+        # Помечаем как пойманного
+        cursor.execute("UPDATE pokedex SET caught = TRUE WHERE user_id = ? AND pokemon_id = ?", (user_id, pokemon['id']))
+        
+        conn.commit()
+        
+        await callback.message.edit_caption(
+            caption=f"🎉 Вы поймали {pokemon['name']}!",
+            reply_markup=None
+        )
     else:
         await callback.message.edit_caption(
             caption=f"❌ {pokemon['name']} сбежал! Попробуйте еще раз.",
@@ -893,6 +829,68 @@ async def run_away_callback(callback: CallbackQuery):
         caption="Вы убежали от покемона!",
         reply_markup=None
     )
+    await callback.answer()
+
+# ========== МАГАЗИН ==========
+
+@dp.message(F.text == "🛒 Магазин")
+async def shop_handler(message: Message):
+    await message.answer("🛒 Добро пожаловать в магазин!", reply_markup=get_shop_menu())
+
+@dp.message(F.text == "🎣 Купить покебал (500)")
+async def buy_pokeball(message: Message):
+    user_id = message.from_user.id
+    cursor.execute("UPDATE users SET balance = balance - 500, pokeballs = pokeballs + 1 WHERE user_id = ? AND balance >= 500", (user_id,))
+    
+    if cursor.rowcount == 0:
+        await message.answer("❌ Недостаточно монет!")
+    else:
+        conn.commit()
+        await message.answer("🎣 Вы купили 1 покебал!")
+    
+    await message.answer("🛒 Магазин:", reply_markup=get_shop_menu())
+
+@dp.message(F.text == "👨‍🏫 Нанять тренера")
+async def hire_trainer_menu(message: Message):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+    
+    cursor.execute("SELECT * FROM trainers")
+    trainers = cursor.fetchall()
+    
+    for trainer in trainers:
+        keyboard.inline_keyboard.append([
+            InlineKeyboardButton(
+                text=f"{trainer[1]} - {trainer[2]} монет (+{trainer[3]}/час)",
+                callback_data=f"hire_{trainer[0]}"
+            )
+        ])
+    
+    await message.answer("Выберите тренера:", reply_markup=keyboard)
+
+@dp.callback_query(F.data.startswith("hire_"))
+async def hire_trainer(callback: CallbackQuery):
+    trainer_id = int(callback.data.split("_")[1])
+    user_id = callback.from_user.id
+    
+    cursor.execute("SELECT * FROM trainers WHERE id = ?", (trainer_id,))
+    trainer = cursor.fetchone()
+    
+    if not trainer:
+        await callback.answer("❌ Тренер не найден!")
+        return
+    
+    cursor.execute("""
+        UPDATE users 
+        SET balance = balance - ?, trainer_id = ?, trainer_level = trainer_level + 1 
+        WHERE user_id = ? AND balance >= ?
+    """, (trainer[2], trainer_id, user_id, trainer[2]))
+    
+    if cursor.rowcount == 0:
+        await callback.answer("❌ Недостаточно монет!")
+    else:
+        conn.commit()
+        await callback.message.answer(f"👨‍🏫 Вы наняли тренера {trainer[1]}! Ваш уровень тренера увеличен.")
+    
     await callback.answer()
 
 # ========== СТАТИСТИКА ==========
@@ -930,9 +928,6 @@ async def stats_handler(message: Message):
     cursor.execute("SELECT COUNT(DISTINCT pokemon_id) FROM pokemons WHERE owner_id = ?", (user_id,))
     unique_pokemons = cursor.fetchone()[0]
     
-    # Получаем текущую лигу
-    current_league = get_user_league(user_id)
-    
     await message.answer(
         f"📊 Ваша статистика:\n"
         f"👤 Имя: {username}\n"
@@ -940,8 +935,7 @@ async def stats_handler(message: Message):
         f"🎣 Покебалы: {pokeballs}\n"
         f"🐲 Всего покемонов: {total_pokemons}\n"
         f"🔄 Уникальных покемонов: {unique_pokemons}\n"
-        f"🏅 Уровень тренера: {trainer_level}\n"
-        f"🏆 Текущая лига: {current_league}"
+        f"🏅 Уровень тренера: {trainer_level}"
         f"{trainer_info}"
     )
 
@@ -951,7 +945,6 @@ async def stats_handler(message: Message):
 async def my_pokemons_handler(message: Message):
     user_id = message.from_user.id
     
-    # Получаем список покемонов с количеством
     cursor.execute("""
         SELECT p.pokemon_id, p.name, p.image, pc.count 
         FROM pokemon_counts pc
@@ -959,7 +952,6 @@ async def my_pokemons_handler(message: Message):
         ON pc.pokemon_id = p.pokemon_id
         WHERE pc.user_id = ?
         ORDER BY pc.count DESC, p.name
-        LIMIT 20
     """, (user_id, user_id))
     pokemons = cursor.fetchall()
     
@@ -974,86 +966,31 @@ async def my_pokemons_handler(message: Message):
     
     await message.answer(response)
 
-# ========== МАГАЗИН ==========
+# ========== ПОКЕДЕКС ==========
 
-@dp.message(F.text == "🛒 Магазин")
-async def shop_handler(message: Message):
-    await message.answer("🛒 Добро пожаловать в магазин!", reply_markup=get_shop_menu())
-
-@dp.message(F.text == "🎣 Купить покебал (500)")
-async def buy_pokeball(message: Message):
+@dp.message(F.text == "📘 Покедекс")
+async def pokedex_handler(message: Message):
     user_id = message.from_user.id
-    cursor.execute("UPDATE users SET balance = balance - 500, pokeballs = pokeballs + 1 WHERE user_id = ? AND balance >= 500", (user_id,))
+    current_league = min(cursor.execute("SELECT trainer_level FROM users WHERE user_id = ?", (user_id,)).fetchone()[0], len(POKEMONS))
     
-    if cursor.rowcount == 0:
-        await message.answer("❌ Недостаточно монет!")
-    else:
-        conn.commit()
-        await message.answer("🎣 Вы купили 1 покебал!")
+    cursor.execute("SELECT COUNT(*) FROM pokedex WHERE user_id = ? AND caught = TRUE", (user_id,))
+    caught = cursor.fetchone()[0]
     
-    await message.answer("🛒 Магазин:", reply_markup=get_shop_menu())
+    cursor.execute("SELECT COUNT(*) FROM pokedex WHERE user_id = ? AND seen = TRUE", (user_id,))
+    seen = cursor.fetchone()[0]
+    
+    # Считаем общее количество покемонов в доступных лигах
+    total_in_leagues = sum(len(POKEMONS.get(league, [])) for league in range(1, current_league + 1))
+    
+    await message.answer(
+        f"📘 Ваш Покедекс:\n"
+        f"✅ Поймано: {caught}\n"
+        f"👀 Видели: {seen}\n"
+        f"🏆 Доступно покемонов: {total_in_leagues}\n"
+        f"🔍 Прогресс: {round(caught/total_in_leagues*100, 1) if total_in_leagues > 0 else 0}%"
+    )
 
-# ========== ТРЕНЕРЫ ==========
-
-@dp.message(F.text == "👨‍🏫 Нанять тренера")
-async def hire_trainer_menu(message: Message):
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[])
-    
-    cursor.execute("SELECT * FROM trainers")
-    trainers = cursor.fetchall()
-    
-    for trainer in trainers:
-        keyboard.inline_keyboard.append([
-            InlineKeyboardButton(
-                text=f"{trainer[1]} - {trainer[2]} монет",
-                callback_data=f"hire_{trainer[0]}"
-            )
-        ])
-    
-    await message.answer("Выберите тренера:", reply_markup=keyboard)
-
-@dp.callback_query(F.data.startswith("hire_"))
-async def hire_trainer(callback: CallbackQuery):
-    trainer_id = int(callback.data.split("_")[1])
-    user_id = callback.from_user.id
-    
-    cursor.execute("SELECT * FROM trainers WHERE id = ?", (trainer_id,))
-    trainer = cursor.fetchone()
-    
-    if not trainer:
-        await callback.answer("❌ Тренер не найден!")
-        return
-    
-    cursor.execute("""
-        UPDATE users 
-        SET balance = balance - ?, trainer_id = ?, trainer_level = trainer_level + 1 
-        WHERE user_id = ? AND balance >= ?
-    """, (trainer[2], trainer_id, user_id, trainer[2]))
-    
-    if cursor.rowcount == 0:
-        await callback.answer("❌ Недостаточно монет!")
-    else:
-        conn.commit()
-        await callback.message.answer(f"👨‍🏫 Вы наняли тренера {trainer[1]}! Ваш уровень тренера увеличен.")
-    
-    await callback.answer()
-
-# ========== АДМИН-ПАНЕЛЬ ==========
-
-@dp.message(F.text == "👑 Админ-панель")
-async def admin_panel(message: Message):
-    if message.from_user.id not in ADMIN_IDS:
-        return
-    
-    await message.answer("👑 Админ-панель:", reply_markup=get_admin_menu())
-
-# Состояния для FSM
-class CreatePokemonState(StatesGroup):
-    name = State()
-    image = State()
-    hp = State()
-    attack = State()
-    defense = State()
+# ========== СОЗДАНИЕ ПОКЕМОНОВ (АДМИН) ==========
 
 @dp.message(F.text == "Создать покемона")
 async def create_pokemon_start(message: Message, state: FSMContext):
@@ -1114,32 +1051,6 @@ async def create_pokemon_defense(message: Message, state: FSMContext):
     except sqlite3.IntegrityError:
         await message.answer("❌ Покемон с таким именем уже существует!")
         await state.clear()
-
-# ========== ПОКЕДЕКС ==========
-
-@dp.message(F.text == "📘 Покедекс")
-async def pokedex_handler(message: Message):
-    user_id = message.from_user.id
-    current_league = get_user_league(user_id)
-    
-    cursor.execute("SELECT COUNT(*) FROM pokedex WHERE user_id = ? AND caught = TRUE", (user_id,))
-    caught = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM pokedex WHERE user_id = ? AND seen = TRUE", (user_id,))
-    seen = cursor.fetchone()[0]
-    
-    # Считаем общее количество покемонов в доступных лигах
-    total_in_leagues = 0
-    for league in range(1, current_league + 1):
-        total_in_leagues += len(POKEMONS.get(league, []))
-    
-    await message.answer(
-        f"📘 Ваш Покедекс:\n"
-        f"✅ Поймано: {caught}\n"
-        f"👀 Видели: {seen}\n"
-        f"🏆 Доступно покемонов: {total_in_leagues}\n"
-        f"🔍 Прогресс: {round(caught/total_in_leagues*100, 1)}%"
-    )
 
 # ========== ЗАПУСК ==========
 
